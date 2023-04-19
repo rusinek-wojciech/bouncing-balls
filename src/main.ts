@@ -1,7 +1,7 @@
+import { createCamera } from './camera'
 import './style.css'
 
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 function createAquarium() {
   const a = 10
@@ -78,35 +78,6 @@ function createRenderer() {
   return renderer
 }
 
-function windowAspect() {
-  return window.innerWidth / window.innerHeight
-}
-
-function createCameraControls(renderer: THREE.WebGLRenderer) {
-  const FOV = 60
-  const NEAR = 1.0
-  const FAR = 1000.0
-
-  const camera = new THREE.PerspectiveCamera(FOV, windowAspect(), NEAR, FAR)
-  camera.position.set(20, 5, 0)
-
-  const controls = new OrbitControls(camera, renderer.domElement)
-  controls.target.set(0, 2, 0)
-  controls.update()
-
-  window.addEventListener(
-    'resize',
-    () => {
-      camera.aspect = windowAspect()
-      camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
-    },
-    { once: true }
-  )
-
-  return camera
-}
-
 function createScene() {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('skyblue')
@@ -139,7 +110,7 @@ function createScene() {
 
 function initialize() {
   const renderer = createRenderer()
-  const camera = createCameraControls(renderer)
+  const camera = createCamera(renderer)
   const scene = createScene()
   const clock = new THREE.Clock()
 
