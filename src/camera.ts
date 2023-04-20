@@ -1,19 +1,11 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { FOV, NEAR, FAR, CAMERA_POSITION, ORBIT_TARGET } from './config'
 
-const FOV = 60
-const NEAR = 1.0
-const FAR = 1000.0
-
-const CAMERA_POSITION = [20, 0, 0] as const
-const ORBIT_TARGET = [0, 0, 0] as const
-
-function windowAspect() {
-  return window.innerWidth / window.innerHeight
-}
+const aspect = () => window.innerWidth / window.innerHeight
 
 export function createCamera(renderer: THREE.WebGLRenderer) {
-  const camera = new THREE.PerspectiveCamera(FOV, windowAspect(), NEAR, FAR)
+  const camera = new THREE.PerspectiveCamera(FOV, aspect(), NEAR, FAR)
   camera.position.set(...CAMERA_POSITION)
 
   const controls = new OrbitControls(camera, renderer.domElement)
@@ -23,7 +15,7 @@ export function createCamera(renderer: THREE.WebGLRenderer) {
   window.addEventListener(
     'resize',
     () => {
-      camera.aspect = windowAspect()
+      camera.aspect = aspect()
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
     },
