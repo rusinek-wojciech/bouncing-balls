@@ -1,21 +1,26 @@
 import { createRenderer } from './renderer'
 import { createCamera } from './camera'
-import { collisionWallBall, createScene } from './scene'
+import { collisionBall, collisionWall, createScene } from './scene'
 
 export function loadApp() {
   const renderer = createRenderer()
   const camera = createCamera(renderer)
   const { scene, balls } = createScene()
 
-  function render() {
+  renderer.setAnimationLoop(() => {
     for (let i = 0; i < balls.length; i++) {
       const ball = balls[i]
-      collisionWallBall(ball)
-    }
-  }
+      collisionWall(ball)
 
-  renderer.setAnimationLoop(() => {
-    render()
+      for (let j = i + 1; j < balls.length; j++) {
+        collisionBall(ball, balls[j])
+      }
+
+      ball.mesh.translateX(ball.speed.x)
+      ball.mesh.translateY(ball.speed.y)
+      ball.mesh.translateZ(ball.speed.z)
+    }
+
     renderer.render(scene, camera)
   })
 }

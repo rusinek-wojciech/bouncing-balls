@@ -4,42 +4,47 @@ import * as THREE from 'three'
  * configuration
  */
 const BALL_RADIUS = 0.5
-const BALLS_COUNT = 10
+const BALLS_COUNT = 5
+
 const A = 10
 const B = 20
-const WALL_HEIGHT = 1.1
-const WALL_THICKNESS = 1
-const MAX_SPEED = 0.25
+const C = 5
+
+const WALL_THICKNESS = 0.4
+const MAX_BALL_SPEED = 0.25
 
 /**
  * do not change
  */
-const EXTENDED_A = A + 2 * WALL_THICKNESS
 const X_WALL_POSITION = A / 2 + WALL_THICKNESS / 2
-const Y_WALL_POSITION = B / 2 + WALL_THICKNESS / 2
-const Z_WALL_POSITION = WALL_HEIGHT / 2
+const Y_WALL_POSITION = C / 2 + WALL_THICKNESS / 2
+const Z_WALL_POSITION = B / 2 + WALL_THICKNESS / 2
+
 const A_WITHOUT_BALL = A - BALL_RADIUS * 2
 const B_WITHOUT_BALL = B - BALL_RADIUS * 2
+const C_WITHOUT_BALL = C - BALL_RADIUS * 2
+
 const HALF_A_WITHOUT_BALL = A_WITHOUT_BALL / 2
 const HALF_B_WITHOUT_BALL = B_WITHOUT_BALL / 2
+const HALF_C_WITHOUT_BALL = C_WITHOUT_BALL / 2
 
 interface SceneBall {
   mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>
-  rb: {
-    x: number
-    y: number
-  }
+  speed: THREE.Vector3
+  mass: number
 }
 
 const balls: SceneBall[] = []
+
+const random = (max: number) => (Math.random() - 0.5) * max
 
 export function createScene() {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('skyblue')
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
-  directionalLight.position.set(5, 10, 5)
-  directionalLight.target.position.set(0, 1, 0)
+  directionalLight.position.set(0.33, 1, 0.66)
+  directionalLight.target.position.set(0, 0, 0)
   directionalLight.castShadow = true
   directionalLight.shadow.bias = -0.001
   directionalLight.shadow.mapSize.width = 2048
@@ -64,21 +69,22 @@ export function createScene() {
 
   for (let i = 0; i < BALLS_COUNT; i++) {
     const ball = new THREE.Mesh(ballGeometry, ballMaterial)
-
-    const x = (Math.random() - 0.5) * A_WITHOUT_BALL
-    const y = (Math.random() - 0.5) * B_WITHOUT_BALL
-
-    ball.position.set(x, BALL_RADIUS, y)
-    ball.quaternion.set(0, 0, 0, 1)
+    ball.position.set(
+      random(A_WITHOUT_BALL),
+      random(C_WITHOUT_BALL),
+      random(B_WITHOUT_BALL)
+    )
     ball.castShadow = true
     ball.receiveShadow = true
     scene.add(ball)
     balls.push({
       mesh: ball,
-      rb: {
-        x: (Math.random() - 0.5) * MAX_SPEED,
-        y: (Math.random() - 0.5) * MAX_SPEED,
-      },
+      speed: new THREE.Vector3(
+        random(MAX_BALL_SPEED),
+        random(MAX_BALL_SPEED),
+        random(MAX_BALL_SPEED)
+      ),
+      mass: 1,
     })
   }
 
@@ -86,74 +92,140 @@ export function createScene() {
 }
 
 function createAquarium() {
-  const material = new THREE.MeshStandardMaterial({
+  const solidMaterial = new THREE.MeshStandardMaterial({
     color: 'teal',
   })
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    roughness: 0.05,
+    transmission: 0.9,
+    thickness: 0.1,
+    color: 'white',
+    transparent: true,
+  })
+
   const aquarium = new THREE.Mesh()
 
-  const floorGeometry = new THREE.BoxGeometry(A, 0, B)
-  const wallGeometry = new THREE.BoxGeometry(WALL_THICKNESS, WALL_HEIGHT, B)
-  const extendedWallGeometry = new THREE.BoxGeometry(
-    EXTENDED_A,
-    WALL_HEIGHT,
+  const AB = new THREE.BoxGeometry(A, WALL_THICKNESS, B)
+  const CB = new THREE.BoxGeometry(WALL_THICKNESS, C, B)
+  const AC = new THREE.BoxGeometry(A, C, WALL_THICKNESS)
+  const A_ = new THREE.BoxGeometry(A, WALL_THICKNESS, WALL_THICKNESS)
+  const B_ = new THREE.BoxGeometry(WALL_THICKNESS, WALL_THICKNESS, B)
+  const C_ = new THREE.BoxGeometry(
+    WALL_THICKNESS,
+    C + 2 * WALL_THICKNESS,
     WALL_THICKNESS
   )
-  floorGeometry.computeVertexNormals()
 
-  const floor = new THREE.Mesh(floorGeometry, material)
-  floor.castShadow = true
-  floor.receiveShadow = true
-  aquarium.add(floor)
+  AB.computeVertexNormals()
+  CB.computeVertexNormals()
+  AC.computeVertexNormals()
+  A_.computeVertexNormals()
+  B_.computeVertexNormals()
+  C_.computeVertexNormals()
 
-  const w1 = new THREE.Mesh(wallGeometry, material)
-  w1.position.set(X_WALL_POSITION, Z_WALL_POSITION, 0)
-  w1.castShadow = true
-  w1.receiveShadow = true
+  const box = (
+    geometry: THREE.BoxGeometry,
+    x: number,
+    y: number,
+    z: number,
+    isGlass = false
+  ) => {
+    const mesh = new THREE.Mesh(
+      geometry,
+      isGlass ? glassMaterial : solidMaterial
+    )
+    mesh.position.set(x, y, z)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    aquarium.add(mesh)
+  }
 
-  const w2 = new THREE.Mesh(wallGeometry, material)
-  w2.position.set(-X_WALL_POSITION, Z_WALL_POSITION, 0)
-  w2.castShadow = true
-  w2.receiveShadow = true
+  box(CB, X_WALL_POSITION, 0, 0, true)
+  box(CB, -X_WALL_POSITION, 0, 0, true)
+  box(AC, 0, 0, Z_WALL_POSITION, true)
+  box(AC, 0, 0, -Z_WALL_POSITION, true)
+  box(AB, 0, Y_WALL_POSITION, 0, true)
+  box(AB, 0, -Y_WALL_POSITION, 0, true)
 
-  const w3 = new THREE.Mesh(extendedWallGeometry, material)
-  w3.position.set(0, Z_WALL_POSITION, Y_WALL_POSITION)
-  w3.castShadow = true
-  w3.receiveShadow = true
+  box(B_, X_WALL_POSITION, Y_WALL_POSITION, 0)
+  box(B_, X_WALL_POSITION, -Y_WALL_POSITION, 0)
+  box(B_, -X_WALL_POSITION, Y_WALL_POSITION, 0)
+  box(B_, -X_WALL_POSITION, -Y_WALL_POSITION, 0)
 
-  const w4 = new THREE.Mesh(extendedWallGeometry, material)
-  w4.position.set(0, Z_WALL_POSITION, -Y_WALL_POSITION)
-  w4.castShadow = true
-  w4.receiveShadow = true
+  box(A_, 0, Y_WALL_POSITION, Z_WALL_POSITION)
+  box(A_, 0, Y_WALL_POSITION, -Z_WALL_POSITION)
+  box(A_, 0, -Y_WALL_POSITION, Z_WALL_POSITION)
+  box(A_, 0, -Y_WALL_POSITION, -Z_WALL_POSITION)
 
-  aquarium.add(w1)
-  aquarium.add(w2)
-  aquarium.add(w3)
-  aquarium.add(w4)
+  box(C_, X_WALL_POSITION, 0, Z_WALL_POSITION)
+  box(C_, X_WALL_POSITION, 0, -Z_WALL_POSITION)
+  box(C_, -X_WALL_POSITION, 0, Z_WALL_POSITION)
+  box(C_, -X_WALL_POSITION, 0, -Z_WALL_POSITION)
+
   return aquarium
 }
 
-export function collisionWallBall(ball: SceneBall) {
-  const { mesh, rb } = ball
+export function collisionWall(ball: SceneBall) {
+  const { mesh, speed } = ball
 
-  const x = mesh.position.x + rb.x
-  const y = mesh.position.z + rb.y
-
-  if (x > HALF_A_WITHOUT_BALL) {
-    rb.x = -rb.x
+  if (mesh.position.x + speed.x > HALF_A_WITHOUT_BALL) {
+    speed.x = -speed.x
+  }
+  if (mesh.position.x + speed.x < -HALF_A_WITHOUT_BALL) {
+    speed.x = -speed.x
   }
 
-  if (x < -HALF_A_WITHOUT_BALL) {
-    rb.x = -rb.x
+  if (mesh.position.y + speed.y > HALF_C_WITHOUT_BALL) {
+    speed.y = -speed.y
+  }
+  if (mesh.position.y + speed.y < -HALF_C_WITHOUT_BALL) {
+    speed.y = -speed.y
   }
 
-  if (y > HALF_B_WITHOUT_BALL) {
-    rb.y = -rb.y
+  if (mesh.position.z + speed.z > HALF_B_WITHOUT_BALL) {
+    speed.z = -speed.z
   }
-
-  if (y < -HALF_B_WITHOUT_BALL) {
-    rb.y = -rb.y
+  if (mesh.position.z + speed.z < -HALF_B_WITHOUT_BALL) {
+    speed.z = -speed.z
   }
+}
 
-  mesh.translateX(rb.x)
-  mesh.translateZ(rb.y)
+const HALF_PI = Math.PI / 2
+
+export function collisionBall(ball1: SceneBall, ball2: SceneBall) {
+  const dx = ball2.mesh.position.x - ball1.mesh.position.x
+  const dy = ball2.mesh.position.y - ball1.mesh.position.y
+  const dz = ball2.mesh.position.z - ball1.mesh.position.z
+
+  const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+  const radiuses =
+    ball1.mesh.geometry.parameters.radius +
+    ball2.mesh.geometry.parameters.radius
+
+  if (distance < radiuses) {
+    const angle1 = Math.atan2(dz, dx)
+    const angle1_ = Math.atan2(dx, dz)
+    const angle2 = Math.atan2(dy, dx)
+    const angle3 = Math.atan2(dz, dy)
+
+    const v1 = Math.sqrt(
+      ball1.speed.x * ball1.speed.x +
+        ball1.speed.y * ball1.speed.y +
+        ball1.speed.z * ball1.speed.z
+    )
+    const v2 = Math.sqrt(
+      ball2.speed.x * ball2.speed.x +
+        ball2.speed.y * ball2.speed.y +
+        ball2.speed.z * ball2.speed.z
+    )
+
+    ball1.speed.x = Math.cos(angle1 + HALF_PI) * v1
+    ball1.speed.y = ball1.speed.y
+    ball1.speed.z = Math.sin(angle1 + HALF_PI) * v1
+
+    ball2.speed.x = Math.cos(angle1) * v2
+    ball2.speed.y = ball2.speed.y
+    ball2.speed.z = Math.sin(angle1) * v2
+  }
 }

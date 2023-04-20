@@ -5,8 +5,8 @@ const FOV = 60
 const NEAR = 1.0
 const FAR = 1000.0
 
-const CAMERA_POSITION = [20, 5, 0] as const
-const ORBIT_TARGET = [0, 2, 0] as const
+const CAMERA_POSITION = [20, 0, 0] as const
+const ORBIT_TARGET = [0, 0, 0] as const
 
 function windowAspect() {
   return window.innerWidth / window.innerHeight
