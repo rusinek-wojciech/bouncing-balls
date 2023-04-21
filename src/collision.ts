@@ -33,11 +33,10 @@ export function collisionBall(b1: SceneBall, b2: SceneBall) {
   relativePosition.copy(b1.mesh.position).sub(b2.mesh.position)
   relativeSpeed.copy(b1.speed).sub(b2.speed)
   nextPosition.copy(relativePosition).add(relativeSpeed)
-
-  if (
-    nextPosition.length() <
+  const distance =
     b1.mesh.geometry.parameters.radius + b2.mesh.geometry.parameters.radius
-  ) {
+
+  if (nextPosition.length() < distance) {
     relativePosition.normalize()
 
     const dot = relativeSpeed.dot(relativePosition)
