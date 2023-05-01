@@ -9,9 +9,9 @@ export const C = 8
 export const B = 20
 
 export const WALL_THICKNESS = 0.4
-export const MAX_BALL_SPEED = 0.2
+export const MAX_BALL_SPEED = 7.5
 
-export const ENERGY_LOSS = 0.2
+export const ENERGY_LOSS = 0.05
 
 /**
  * camera configuration

@@ -3,7 +3,7 @@ import WebGL from 'three/examples/jsm/capabilities/WebGL'
 import * as THREE from 'three'
 import { createCamera } from './camera'
 import { createScene } from './scene'
-import { collisionBox, collisionBall } from './collision'
+import { collisionBall, collisionBox } from './collision'
 
 function createRenderer() {
   const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -21,18 +21,19 @@ function loadApp() {
   const renderer = createRenderer()
   const camera = createCamera(renderer)
   const { scene, balls } = createScene()
+  const clock = new THREE.Clock()
 
   renderer.setAnimationLoop(() => {
-    for (let i = 0; i < balls.length; i++) {
-      const ball = balls[i]
-      collisionBox(ball)
+    const dt = clock.getDelta()
 
+    for (let i = 0; i < balls.length; i++) {
+      collisionBox(balls[i], dt)
       for (let j = i + 1; j < balls.length; j++) {
-        collisionBall(ball, balls[j])
+        collisionBall(balls[i], balls[j], dt)
       }
-      ball.mesh.position.add(ball.speed)
     }
 
+    balls.forEach((ball) => ball.setNextPosition(dt))
     renderer.render(scene, camera)
   })
 }

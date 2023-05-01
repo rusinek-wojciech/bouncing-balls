@@ -11,9 +11,8 @@ import {
   Y_WALL_POSITION,
   Z_WALL_POSITION,
 } from './config'
-import { SceneBall } from './types'
-
-const random = (max: number) => (Math.random() - 0.5) * max
+import { SceneBall } from './SceneBall'
+import { random } from './utils'
 
 export function createScene() {
   const scene = new THREE.Scene()
@@ -43,33 +42,19 @@ export function createScene() {
 
   const balls: SceneBall[] = []
   for (let i = 0; i < BALLS_COUNT; i++) {
-    const ball = createBall()
-    balls.push(ball)
-    scene.add(ball.mesh)
+    const position = new THREE.Vector3(
+      random(A - BALL_RADIUS * 2),
+      random(C - BALL_RADIUS * 2),
+      random(B - BALL_RADIUS * 2)
+    )
+    const velocity = new THREE.Vector3(
+      random(MAX_BALL_SPEED),
+      random(MAX_BALL_SPEED),
+      random(MAX_BALL_SPEED)
+    )
+    balls.push(SceneBall.create(scene, position, velocity, BALL_RADIUS))
   }
   return { scene, balls }
-}
-
-function createBall() {
-  const geometry = new THREE.SphereGeometry(BALL_RADIUS)
-  const position = new THREE.Vector3(
-    random(A - geometry.parameters.radius * 2),
-    random(C - geometry.parameters.radius * 2),
-    random(B - geometry.parameters.radius * 2)
-  )
-  const speed = new THREE.Vector3(
-    random(MAX_BALL_SPEED),
-    random(MAX_BALL_SPEED),
-    random(MAX_BALL_SPEED)
-  )
-  const material = new THREE.MeshStandardMaterial({
-    color: `hsl(220, ${Math.random() * 100}%, ${Math.random() * 100}%)`,
-  })
-  const ball = new THREE.Mesh(geometry, material)
-  ball.castShadow = true
-  ball.receiveShadow = true
-  ball.position.copy(position)
-  return { mesh: ball, speed }
 }
 
 function createBox() {
