@@ -1,47 +1,43 @@
-import * as THREE from 'three'
 import { ENERGY_LOSS_INDICATOR, HALF_A, HALF_B, HALF_C } from './config'
-import { SceneBall } from './types'
+import { SceneBall } from './SceneBall'
+import { from } from './utils'
 
-const nextPosition = new THREE.Vector3()
-const relativePosition = new THREE.Vector3()
-const relativeSpeed = new THREE.Vector3()
+export function collisionBox(ball: SceneBall, dt: number) {
+  const X = HALF_A - ball.radius
+  const Y = HALF_C - ball.radius
+  const Z = HALF_B - ball.radius
 
-export function collisionBox(b: SceneBall) {
-  const { mesh, speed } = b
-  nextPosition.copy(mesh.position).add(speed)
+  const nextPos = ball.nextPosition(dt)
 
-  const dx = HALF_A - mesh.geometry.parameters.radius
-  if (nextPosition.x > dx || nextPosition.x < -dx) {
-    b.speed.multiplyScalar(ENERGY_LOSS_INDICATOR)
-    speed.x = -speed.x
+  if (nextPos.x > X || nextPos.x < -X) {
+    ball.bounceX(ENERGY_LOSS_INDICATOR)
   }
-
-  const dy = HALF_C - mesh.geometry.parameters.radius
-  if (nextPosition.y > dy || nextPosition.y < -dy) {
-    b.speed.multiplyScalar(ENERGY_LOSS_INDICATOR)
-    speed.y = -speed.y
+  if (nextPos.y > Y || nextPos.y < -Y) {
+    ball.bounceY(ENERGY_LOSS_INDICATOR)
   }
-
-  const dz = HALF_B - mesh.geometry.parameters.radius
-  if (nextPosition.z > dz || nextPosition.z < -dz) {
-    b.speed.multiplyScalar(ENERGY_LOSS_INDICATOR)
-    speed.z = -speed.z
+  if (nextPos.z > Z || nextPos.z < -Z) {
+    ball.bounceZ(ENERGY_LOSS_INDICATOR)
   }
 }
 
-export function collisionBall(b1: SceneBall, b2: SceneBall) {
-  relativePosition.copy(b1.mesh.position).sub(b2.mesh.position)
-  relativeSpeed.copy(b1.speed).sub(b2.speed)
-  nextPosition.copy(relativePosition).add(relativeSpeed)
-  const distance =
-    b1.mesh.geometry.parameters.radius + b2.mesh.geometry.parameters.radius
+export function collisionBall(b1: SceneBall, b2: SceneBall, dt: number) {
+  const relativePos = from(b1.position).sub(b2.position)
+  const relativeVel = b1.velocity(dt).sub(b2.velocity(dt))
+  const displacement = from(relativeVel).multiplyScalar(dt)
 
-  if (nextPosition.length() < distance) {
-    relativePosition.normalize()
+  if (from(relativePos).add(displacement).length() < b1.radius + b2.radius) {
+    const m = b1.m + b2.m
+    const m1 = (2 * b2.m) / m
+    const m2 = (2 * b1.m) / m
 
-    const dot = relativeSpeed.dot(relativePosition)
-    relativePosition.multiplyScalar(dot * ENERGY_LOSS_INDICATOR)
-    b1.speed.sub(relativePosition)
-    b2.speed.add(relativePosition)
+    const direction = relativePos.normalize()
+    const dot = relativeVel.dot(direction)
+
+    b1.subVelocity(
+      from(direction).multiplyScalar(m1 * dot * ENERGY_LOSS_INDICATOR)
+    )
+    b2.addVelocity(
+      from(direction).multiplyScalar(m2 * dot * ENERGY_LOSS_INDICATOR)
+    )
   }
 }
