@@ -1,17 +1,20 @@
 /**
  * area configuration
  */
-export const BALL_RADIUS = 0.5
-export const BALLS_COUNT = 30
-
 export const A = 10
-export const C = 8
 export const B = 20
-
+export const C = 8
 export const WALL_THICKNESS = 0.4
-export const MAX_BALL_SPEED = 7.5
+export const FORCE = [0, 0, 0] as const
 
-export const ENERGY_LOSS = 0.05
+/**
+ * balls configuration
+ */
+export const BALLS_COUNT = 30
+export const BALL_RADIUS = 0.5
+export const BALL_MAX_SPEED = 7.5
+export const BALL_ENERGY_LOSS = 0.05
+export const BALL_MASS = 1
 
 /**
  * camera configuration
@@ -34,4 +37,4 @@ export const X_WALL_POSITION = HALF_A + HALF_WALL_THICKNESS
 export const Y_WALL_POSITION = HALF_C + HALF_WALL_THICKNESS
 export const Z_WALL_POSITION = HALF_B + HALF_WALL_THICKNESS
 
-export const ENERGY_LOSS_INDICATOR = 1 - ENERGY_LOSS
+export const ENERGY_LOSS_INDICATOR = 1 - BALL_ENERGY_LOSS

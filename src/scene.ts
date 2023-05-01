@@ -2,17 +2,14 @@ import * as THREE from 'three'
 import {
   A,
   B,
-  BALLS_COUNT,
-  BALL_RADIUS,
   C,
-  MAX_BALL_SPEED,
+  BALLS_COUNT,
   WALL_THICKNESS,
   X_WALL_POSITION,
   Y_WALL_POSITION,
   Z_WALL_POSITION,
 } from './config'
 import { SceneBall } from './SceneBall'
-import { random } from './utils'
 
 export function createScene() {
   const scene = new THREE.Scene()
@@ -42,17 +39,7 @@ export function createScene() {
 
   const balls: SceneBall[] = []
   for (let i = 0; i < BALLS_COUNT; i++) {
-    const position = new THREE.Vector3(
-      random(A - BALL_RADIUS * 2),
-      random(C - BALL_RADIUS * 2),
-      random(B - BALL_RADIUS * 2)
-    )
-    const velocity = new THREE.Vector3(
-      random(MAX_BALL_SPEED),
-      random(MAX_BALL_SPEED),
-      random(MAX_BALL_SPEED)
-    )
-    balls.push(SceneBall.create(scene, position, velocity, BALL_RADIUS))
+    balls.push(SceneBall.create(scene))
   }
   return { scene, balls }
 }
